@@ -1,0 +1,8 @@
+# Ignore Bunch vendor directory
+.vendor
+
+# Ignore direnv .envrc
+.envrc
+
+# Ignore compiled versions
+bin
