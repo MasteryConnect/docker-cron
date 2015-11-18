@@ -1,3 +1,3 @@
-bitbucket.org/masteryconnectetl/docker-cron !self
+github.com/MasteryConnect/docker-cron !self
 github.com/codegangsta/cli
 github.com/robfig/cron
