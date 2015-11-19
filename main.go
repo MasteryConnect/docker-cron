@@ -122,19 +122,10 @@ SOFTWARE.
 
 			cmd := exec.Command("sh", "-c", command)
 
-			cmdReader, err := cmd.StdoutPipe()
-			if err != nil {
-				log.Fatal("Error creating stdoutpipe for command", err)
-			}
+			setupStdout(cmd)
+			setupStderr(cmd)
 
-			scanner := bufio.NewScanner(cmdReader)
-			go func() {
-				for scanner.Scan() {
-					log.Println(scanner.Text())
-				}
-			}()
-
-			err = cmd.Start()
+			err := cmd.Start()
 			if err != nil {
 				log.Fatal("Error running command", err)
 			}
@@ -153,4 +144,33 @@ SOFTWARE.
 	}
 
 	app.Run(os.Args)
+}
+
+func setupStdout(cmd *exec.Cmd) {
+	cmdReader, err := cmd.StdoutPipe()
+	if err != nil {
+		log.Fatal("Error creating stdoutpipe for command", err)
+	}
+
+	scanner := bufio.NewScanner(cmdReader)
+	go func() {
+		for scanner.Scan() {
+			log.Println(scanner.Text())
+		}
+	}()
+}
+
+func setupStderr(cmd *exec.Cmd) {
+	cmdReader, err := cmd.StderrPipe()
+	if err != nil {
+		log.Fatal("Error creating stderrpipe for command", err)
+	}
+
+	scanner := bufio.NewScanner(cmdReader)
+	go func() {
+		for scanner.Scan() {
+			log.Printf("ERR: %s\n", scanner.Text())
+		}
+	}()
+
 }
