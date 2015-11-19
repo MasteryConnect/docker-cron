@@ -49,34 +49,40 @@ SOFTWARE.
 	`
 	app.Flags = []cli.Flag{
 		cli.StringFlag{
-			Name:  "seconds",
-			Value: "*",
-			Usage: "seconds: 0-59, */10",
+			Name:   "seconds",
+			Value:  "*",
+			Usage:  "seconds: 0-59, */10",
+			EnvVar: "DC_SECS",
 		},
 		cli.StringFlag{
-			Name:  "minutes",
-			Value: "*",
-			Usage: "minutes: 0-59, */10",
+			Name:   "minutes",
+			Value:  "*",
+			Usage:  "minutes: 0-59, */10",
+			EnvVar: "DC_MINS",
 		},
 		cli.StringFlag{
-			Name:  "hours",
-			Value: "*",
-			Usage: "hours: 0-23, */10",
+			Name:   "hours",
+			Value:  "*",
+			Usage:  "hours: 0-23, */10",
+			EnvVar: "DC_HOURS",
 		},
 		cli.StringFlag{
-			Name:  "day-of-month",
-			Value: "*",
-			Usage: "day of month: 1-31",
+			Name:   "day-of-month",
+			Value:  "*",
+			Usage:  "day of month: 1-31",
+			EnvVar: "DC_DOM",
 		},
 		cli.StringFlag{
-			Name:  "months",
-			Value: "*",
-			Usage: "month: 1-12 or JAN-DEC, */10",
+			Name:   "months",
+			Value:  "*",
+			Usage:  "month: 1-12 or JAN-DEC, */10",
+			EnvVar: "DC_MONTHS",
 		},
 		cli.StringFlag{
-			Name:  "day-of-week",
-			Value: "*",
-			Usage: "day of week: 0-6 or SUN-SAT",
+			Name:   "day-of-week",
+			Value:  "*",
+			Usage:  "day of week: 0-6 or SUN-SAT",
+			EnvVar: "DC_DOW",
 		},
 	}
 	app.Action = func(con *cli.Context) {
