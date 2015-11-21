@@ -7,12 +7,16 @@ import (
 	"os/exec"
 	"os/signal"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 
 	"github.com/codegangsta/cli"
 	"github.com/robfig/cron"
 )
+
+var running bool
+var mu = &sync.Mutex{}
 
 func main() {
 	app := cli.NewApp()
@@ -84,6 +88,11 @@ SOFTWARE.
 			Usage:  "day of week: 0-6 or SUN-SAT",
 			EnvVar: "DC_DOW",
 		},
+		cli.BoolFlag{
+			Name:   "sync-jobs",
+			Usage:  "should the jobs be run one at a time (true), or whenever they are scheduled",
+			EnvVar: "DC_SYNC",
+		},
 	}
 	app.Action = func(con *cli.Context) {
 		// Vars
@@ -118,21 +127,29 @@ SOFTWARE.
 		}, " ")
 		log.Printf("Setup cron to run on schedule: %s\n", schedule)
 		c.AddFunc(schedule, func() {
-			log.Printf("Running cron on schedule: %s\n", schedule)
+			// Run one at a time, syncFlag=true, or whenever scheduled
+			syncFlag := con.Bool("sync-jobs")
+			if runJob(syncFlag) {
+				defer jobDone(syncFlag)
 
-			cmd := exec.Command("sh", "-c", command)
+				log.Printf("Running cron on schedule: %s\n", schedule)
 
-			setupStdout(cmd)
-			setupStderr(cmd)
+				cmd := exec.Command("sh", "-c", command)
 
-			err := cmd.Start()
-			if err != nil {
-				log.Fatal("Error running command", err)
-			}
+				setupStdout(cmd)
+				setupStderr(cmd)
 
-			err = cmd.Wait()
-			if err != nil {
-				log.Fatal("Error waiting for command", err)
+				err := cmd.Start()
+				if err != nil {
+					log.Fatal("Error running command", err)
+				}
+
+				err = cmd.Wait()
+				if err != nil {
+					log.Fatal("Error waiting for command", err)
+				}
+			} else {
+				log.Println("A job is already running. The sync-jobs flag is true so we only run one at a time")
 			}
 		})
 		c.Start()
@@ -172,5 +189,31 @@ func setupStderr(cmd *exec.Cmd) {
 			log.Printf("ERR: %s\n", scanner.Text())
 		}
 	}()
+}
 
+// Should we run a job. If syncFlag is false, then we always run a job even if
+// there is already one running. If syncFlag is true, then we only run a job
+// if one is not already running
+func runJob(syncFlag bool) bool {
+	if syncFlag {
+		mu.Lock()
+		defer mu.Unlock()
+		if running {
+			return false
+		} else {
+			running = true
+			return true
+		}
+	}
+	// Always run, even if there is already one running
+	return true
+}
+
+func jobDone(syncFlag bool) {
+	// We only need to change the running state if we have syncrhonous job runs
+	if syncFlag {
+		mu.Lock()
+		defer mu.Unlock()
+		running = false
+	}
 }
